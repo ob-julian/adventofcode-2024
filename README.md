@@ -1,4 +1,4 @@
-# Advent of Code - >Year<
+# Advent of Code - 2024
 
 | Day | Star 1 | Used AI | Language | Star 2 | Used AI | Language |
 |-----|--------|---------|----------|--------|---------|----------|

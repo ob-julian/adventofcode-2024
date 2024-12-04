@@ -19,9 +19,9 @@ function executeInstructions(instructionSets) {
     return sum;
 }
 
-function splitInDoAndDont(data) {
+function getDoes(data) {
     // For correctly using Lookahead, thx Copilot
-    return data.match(/(do(n't)?\(\))?.*?(?=((do(n't)?\(\))|$))/g);
+    return data.match(/(do\(\)|^).*?(?=((do(n't)?\(\))|$))/g);
 }
 
 function solve1(data) {
@@ -34,13 +34,11 @@ function solve1(data) {
 
 function solve2(data) {
     let sum = 0;
-    const instructionSets = splitInDoAndDont(data);
+    const instructionSets = getDoes(data);
     sum = solve1(instructionSets[0]);
     if (instructionSets.length > 1) {
         for (let i = 1; i < instructionSets.length; i++) {
-            if (instructionSets[i].startsWith("do()")) {
-                sum += solve1(instructionSets[i]);
-            }
+            sum += solve1(instructionSets[i]);
         }
     }
     return sum;

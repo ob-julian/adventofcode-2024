@@ -26,7 +26,7 @@ def solver2(puzzle_input):
     operators = [
         lambda x, y: x + y,
         lambda x, y: x * y,
-        lambda x, y: int(str(x) + str(y))
+        lambda x, y: x * (10 ** len(str(y))) + y
     ]
     return count_correct_equations(puzzle_input, operators)
 

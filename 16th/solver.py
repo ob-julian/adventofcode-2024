@@ -84,9 +84,14 @@ def find_winning_deers(maze):
     start = find_deers(maze, 'S')
     end = find_deers(maze, 'E')
 
+    all_paths = set()
+
     queue = []
     # staritng deer facing east
-    heapq.heappush(queue, Deer(start, 3, 0, maze, np.zeros((len(maze), len(maze[0])))))
+    started_deer = Deer(start, 3, 0, maze, np.zeros((len(maze), len(maze[0]))))
+    heapq.heappush(queue, started_deer)
+    add_array_to_set(started_deer.local_maze, all_paths)
+
     winning_deers = []
     while len(queue) > 0:
         local_mazee = np.zeros((len(maze), len(maze[0])), dtype=int)
@@ -98,8 +103,10 @@ def find_winning_deers(maze):
             else:
                 local_mazee[deer.y][deer.x] -= 1
         print_maze(local_mazee)
+        print()
         deer = heapq.heappop(queue)
-        print(len(queue) + 1)
+        remove_array_from_set(deer.local_maze, all_paths)
+        #print(len(queue) + 1)
         if (deer.x, deer.y) == end:
             print("Found deer with", deer.points, "points")
             if len(winning_deers) > 0:
@@ -111,7 +118,20 @@ def find_winning_deers(maze):
         for next_deer in deer.next_moves():
             if next_deer is not None:
                 heapq.heappush(queue, next_deer)
+                if not is_array_in_set(next_deer.local_maze, all_paths):
+                    add_array_to_set(next_deer.local_maze, all_paths)
+                else:
+                    print("Deer Duplicated")
     return winning_deers
+
+def add_array_to_set(array, set):
+    set.add(tuple(map(tuple, array)))
+
+def remove_array_from_set(array, set):
+    set.remove(tuple(map(tuple, array)))
+
+def is_array_in_set(array, set):
+    return tuple(map(tuple, array)) in set
 
 def solver1(deers):
     return deers[0].points

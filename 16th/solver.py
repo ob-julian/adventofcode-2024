@@ -33,13 +33,14 @@ class Deer :
         new_x = self.x + DIRECTIONS[self.direction][0]
         new_y = self.y + DIRECTIONS[self.direction][1]
         # wall or loop
-        if self.maze[new_y][new_x] == '#' or self.local_maze[new_y][new_x] == 1:
-            print("Wall or loop")
+        if self.maze[new_y][new_x] == '#' or self.local_maze[new_y][new_x] != 0:
+            #("Wall or loop")
+            self.local_maze = None # clear local maze
             return None
-        self.local_maze[self.y][self.x] = 1
         self.points += 1
         self.x = new_x
         self.y = new_y
+        self.local_maze[self.y][self.x] = 1
         return self
 
     def next_moves(self):
@@ -52,7 +53,7 @@ class Deer :
     def imprint_path(self, local_maze):
         for i, row in enumerate(local_maze):
             for j, _ in enumerate(row):
-                if self.local_maze[i][j] == 1:
+                if self.local_maze[i][j] != 0:
                     local_maze[i][j] = 1
 
 
@@ -84,72 +85,61 @@ def find_winning_deers(maze):
     start = find_deers(maze, 'S')
     end = find_deers(maze, 'E')
 
-    all_paths = set()
-
     queue = []
+    deer_hash = {}
     # staritng deer facing east
-    started_deer = Deer(start, 3, 0, maze, np.zeros((len(maze), len(maze[0]))))
+    start_points = 1
+    start_direction = 3
+    started_deer = Deer(start, start_direction, start_points, maze, np.zeros((len(maze), len(maze[0]))))
+    deer_hash[start] = started_deer
     heapq.heappush(queue, started_deer)
-    add_array_to_set(started_deer.local_maze, all_paths)
 
     winning_deers = []
+    iter = 0
     while len(queue) > 0:
-        local_mazee = np.zeros((len(maze), len(maze[0])), dtype=int)
-        for deer in queue:
-            deer.imprint_path(local_mazee)
-        for deer in queue:
-            if local_mazee[deer.y][deer.x] >= 0:
-                local_mazee[deer.y][deer.x] = -1
-            else:
-                local_mazee[deer.y][deer.x] -= 1
-        print_maze(local_mazee)
-        print()
         deer = heapq.heappop(queue)
-        remove_array_from_set(deer.local_maze, all_paths)
-        #print(len(queue) + 1)
+        #TODO: add paths that are at same tile with same points
+        iter += 1
+        if iter == 10000:
+            iter = 0
+            print(len(queue))
+            all_paths = np.copy(deer.local_maze)
+            for next_deer in queue:
+                next_deer.imprint_path(all_paths)
+            for next_deer in queue:
+                all_paths[next_deer.y][next_deer.x] += 1
+            print_maze(all_paths)
+        # found deer
         if (deer.x, deer.y) == end:
-            print("Found deer with", deer.points, "points")
             if len(winning_deers) > 0:
                 if deer.points == winning_deers[0].points:
                     winning_deers.append(deer)
-                else:
-                    break
+                    continue
+                # else
+                break
             winning_deers.append(deer)
+
+        # add next moves
         for next_deer in deer.next_moves():
             if next_deer is not None:
                 heapq.heappush(queue, next_deer)
-                if not is_array_in_set(next_deer.local_maze, all_paths):
-                    add_array_to_set(next_deer.local_maze, all_paths)
-                else:
-                    print("Deer Duplicated")
     return winning_deers
 
-def add_array_to_set(array, set):
-    set.add(tuple(map(tuple, array)))
-
-def remove_array_from_set(array, set):
-    set.remove(tuple(map(tuple, array)))
-
-def is_array_in_set(array, set):
-    return tuple(map(tuple, array)) in set
-
 def solver1(deers):
-    return deers[0].points
+    return deers[0].points - 1 # cause we start with 1 instead of 0
 
 def solver2(deers):
     for i in range(1, len(deers)):
-        print_maze(deers[i].local_maze)
-        print()
         deers[i].imprint_path(deers[0].local_maze)
-    return sum(line.count(1) for line in deers[0].local_maze)
+    return np.count_nonzero(deers[0].local_maze)
 
 def print_maze(maze):
     max_len = max(len(str(cell)) for row in maze for cell in row)
     for line in maze:
         print(" ".join(str(cell).rjust(max_len) for cell in line))
 
-#FILE = "input.txt"
-FILE = "test_1.txt"
+FILE = "input.txt"
+#FILE = "test_1.txt"
 #FILE = "test_2.txt"
 
 INPUT = parser(file_reader(FILE))
